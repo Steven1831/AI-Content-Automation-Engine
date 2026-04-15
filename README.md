@@ -1,4 +1,4 @@
-# Video Automation Framework
+# AI Content Automation Engine
 
 A powerful, modular framework designed to automate professional video creation workflows. This project follows a strict **Tools & Pipelines** architecture, orchestrating atomic infrastructure (tools) into comprehensive, high-quality video products (pipelines).
 
