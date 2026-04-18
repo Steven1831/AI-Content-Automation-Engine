@@ -2,13 +2,13 @@ import argparse
 from enum import Enum
 from pathlib import Path
 
-from apps.image_content_generator.pipeline.pipeline import Pipeline
-from apps.image_content_generator.pipeline.schemas import VideoOrientation
+from flows.image_content_generator.pipeline.pipeline import Pipeline
+from flows.image_content_generator.pipeline.schemas import VideoOrientation
 from tools.common.messenger import Messenger
 
-RESOURCE_BASE = Path("apps/image_content_generator/resource")
-LONG_OUT_BASE = Path("apps/image_content_generator/out_long")
-SHORT_OUT_BASE = Path("apps/image_content_generator/out_short")
+RESOURCE_BASE = Path("flows/image_content_generator/resource")
+LONG_OUT_BASE = Path("flows/image_content_generator/out_long")
+SHORT_OUT_BASE = Path("flows/image_content_generator/out_short")
 
 
 class PipelineStep(str, Enum):

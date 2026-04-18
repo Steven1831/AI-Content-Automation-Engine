@@ -4,11 +4,11 @@ from typing import Any, ClassVar, List, Optional, Type, TypeVar, Union
 
 from pydantic import BaseModel, PrivateAttr
 
-from apps.image_content_generator.pipeline.prompt_base.models import VideoScript
-from apps.image_content_generator.pipeline.prompt_longs.manager import PromptManagerLongs
-from apps.image_content_generator.pipeline.prompt_shorts.manager import PromptManagerShorts
-from apps.image_content_generator.pipeline.schemas import AudioAlignment, State, VideoOrientation
-from apps.image_content_generator.pipeline.storage_csv import CsvStore
+from flows.image_content_generator.pipeline.prompt_base.models import VideoScript
+from flows.image_content_generator.pipeline.prompt_longs.manager import PromptManagerLongs
+from flows.image_content_generator.pipeline.prompt_shorts.manager import PromptManagerShorts
+from flows.image_content_generator.pipeline.schemas import AudioAlignment, State, VideoOrientation
+from flows.image_content_generator.pipeline.storage_csv import CsvStore
 from tools.audio_generation.audio_tool import AudioTool
 from tools.audio_generation.gemini import GeminiAudioGenerator
 from tools.common.base_model import BaseModelTool

@@ -4,7 +4,7 @@ from typing import Any, cast
 
 import pandas as pd
 
-from apps.image_content_generator.pipeline.schemas import IdeaRaw, State
+from flows.image_content_generator.pipeline.schemas import IdeaRaw, State
 from tools.common.csv_processor import CsvProcessor
 
 
