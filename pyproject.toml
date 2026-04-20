@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "Video Automation Project"
 authors = ["Hans <hans.acha.brand@gmail.com>"]
 readme = "README.md"
-packages = [{ include = "apps" }]
+packages = [{ include = "flows" }]
 
 [tool.poetry.dependencies]
 python = "^3.11"
@@ -35,7 +35,7 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.pyright]
-include = ["apps", "tools", "models"]
+include = ["flows", "tools", "models"]
 exclude = ["**/node_modules", "**/__pycache__", ".venv"]
 venvPath = "."
 venv = ".venv"
@@ -45,7 +45,7 @@ reportMissingTypeStubs = false
 pythonVersion = "3.11"
 pythonPlatform = "Darwin"
 executionEnvironments = [
-  { root = "apps" },
+  { root = "flows" },
   { root = "tools" },
   { root = "models" }
 ]

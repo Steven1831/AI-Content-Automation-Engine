@@ -3,12 +3,12 @@
 Standardized structural guidelines for the video automation repository.
 
 ## 1. Repository Layout
-- `apps/`: Concrete implementations of pipelines (products).
+- `flows/`: Concrete implementations of pipelines (products).
 - `tools/`: Shared, reusable logic components (infrastructure).
 - `.rules/`: Documentation of standards and agent guidelines.
 
-## 2. App Structure
-Every app under `apps/` must follow:
+## 2. Flow Structure
+Every flow under `flows/` must follow:
 - `pipeline/`: Core logic (entry points, pipeline class, schemas).
 - `out/`: Data persistence and generated assets.
 - `resource/`: Templates and static assets.

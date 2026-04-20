@@ -1,15 +1,15 @@
 from typing import Sequence, Tuple, Type
 
-from apps.image_content_generator.pipeline.prompt_base.manager import BasePromptManager
-from apps.image_content_generator.pipeline.prompt_base.models import (
+from flows.image_content_generator.pipeline.prompt_base.manager import BasePromptManager
+from flows.image_content_generator.pipeline.prompt_base.models import (
     BaseIdea,
     CategoryHandler,
     VideoScript,
 )
-from apps.image_content_generator.pipeline.prompt_shorts.finances import (
+from flows.image_content_generator.pipeline.prompt_shorts.finances import (
     constants as finances_constants,
 )
-from apps.image_content_generator.pipeline.prompt_shorts.finances.models import FinancesHandler
+from flows.image_content_generator.pipeline.prompt_shorts.finances.models import FinancesHandler
 from tools.common.messenger import Messenger
 from tools.text_generation.gemini import GeminiTextGenerator
 

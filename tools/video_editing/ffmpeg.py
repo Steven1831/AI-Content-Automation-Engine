@@ -29,8 +29,8 @@ class FFmpegTool(BaseModelTool):
         Splits an audio file into a segment starting at start_time with duration.
         """
         cmd = (
-            f"ffmpeg -y -ss {start_time} -t {duration} "
-            f"-i {shlex.quote(str(audio_in))} -c copy {shlex.quote(str(audio_out))} "
+            f"ffmpeg -y -i {shlex.quote(str(audio_in))} "
+            f"-ss {start_time} -t {duration} {shlex.quote(str(audio_out))} "
             f"-v error"
         )
         self._run(cmd)
@@ -168,7 +168,7 @@ class FFmpegTool(BaseModelTool):
         total_frames = int(duration * fps)
         f1 = total_frames * 0.3
         f2 = total_frames * 0.7
-        
+
         # Infer dimensions from the source image
         width = self.get_video_width(img_path)
         height = self.get_video_height(img_path)

@@ -1,5 +1,5 @@
-from apps.image_content_generator.pipeline.prompt_base.models import BaseIdea, CategoryHandler
-from apps.image_content_generator.pipeline.prompt_longs.finances import (
+from flows.image_content_generator.pipeline.prompt_base.models import BaseIdea, CategoryHandler
+from flows.image_content_generator.pipeline.prompt_longs.finances import (
     constants as finance_long_constants,
 )
 

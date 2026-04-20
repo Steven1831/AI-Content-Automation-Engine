@@ -80,8 +80,8 @@ Shared, reusable atomic components that handle all infrastructure tasks:
 | `video_editing/whisper.py` | Whisper.cpp wrappers for transcription and SRT generation |
 | `common/` | Messenger, retry logic, base models, and shared utilities |
 
-### 🚀 Pipelines (`apps/`)
-Concrete video product implementations. Each app coordinates tools into a multi-step workflow:
+### 🚀 Pipelines (`flows/`)
+Concrete video product implementations. Each flow coordinates tools into a multi-step workflow:
 
 - **`image_content_generator/`**: The core automated video factory. Transforms a raw niche idea into a fully-produced video (Shorts 9:16 or Longs 16:9) with synchronized AI imagery, narration, subtitles, and background music.
 
@@ -100,7 +100,7 @@ This framework uses a **Pydantic-Driven, Niche-Pluggable Prompt Architecture**:
 
 ```
 video-automation/
-├── apps/
+├── flows/
 │   └── image_content_generator/
 │       ├── pipeline/
 │       │   ├── pipeline.py           # Main orchestrator (7 steps)

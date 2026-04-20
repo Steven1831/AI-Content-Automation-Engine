@@ -21,8 +21,8 @@ class PipelineStep(str, Enum):
     STEP2 = "step2"
     ...
 
-OUT_BASE = Path("apps/project/out")
-RESOURCE_BASE = Path("apps/project/resource")
+OUT_BASE = Path("flows/project/out")
+RESOURCE_BASE = Path("flows/project/resource")
 
 def main():
     parser = argparse.ArgumentParser()

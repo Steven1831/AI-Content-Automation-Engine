@@ -4,8 +4,8 @@ The master guide for creating a new video automation project.
 
 ## 1. Bootstrap Structure
 ```bash
-mkdir -p apps/<app_id>/pipeline apps/<app_id>/out apps/<app_id>/resource
-touch apps/<app_id>/__init__.py apps/<app_id>/pipeline/__init__.py
+mkdir -p flows/<app_id>/pipeline flows/<app_id>/out flows/<app_id>/resource
+touch flows/<app_id>/__init__.py flows/<app_id>/pipeline/__init__.py
 ```
 
 ## 2. Implement Core Layer

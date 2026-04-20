@@ -1,13 +1,13 @@
 from typing import List, Sequence, Tuple, Type
 
-from apps.image_content_generator.pipeline.prompt_base.manager import BasePromptManager
-from apps.image_content_generator.pipeline.prompt_base.models import (
+from flows.image_content_generator.pipeline.prompt_base.manager import BasePromptManager
+from flows.image_content_generator.pipeline.prompt_base.models import (
     BaseIdea,
     CategoryHandler,
     Scene,
     VideoScript,
 )
-from apps.image_content_generator.pipeline.prompt_longs.finances.models import FinancesHandlerLong
+from flows.image_content_generator.pipeline.prompt_longs.finances.models import FinancesHandlerLong
 from tools.common.messenger import Messenger
 from tools.text_generation.gemini import GeminiTextGenerator
 
