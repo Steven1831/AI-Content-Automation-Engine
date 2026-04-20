@@ -11,6 +11,8 @@ A powerful, modular framework designed to automate professional video creation w
 - [Poetry](https://python-poetry.org/docs/#installation)
 - [FFmpeg](https://ffmpeg.org/download.html)
 - [Whisper.cpp](https://github.com/ggerganov/whisper.cpp) (for transcription)
+  - Ensure you have the `whisper-cli` installed and available in your PATH.
+  - **Model Required**: Download the `small` model (`ggml-small.bin`) and place it in `models/whisper/`.
 - Google Gemini API Key
 
 ### Installation
