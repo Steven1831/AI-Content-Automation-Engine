@@ -50,15 +50,16 @@ class BaseIdea(BaseModel):
 
 
 class Subject(BaseModel):
-    description: str = Field(description="Highly detailed physical description in ENGLISH (clothing, features, expression, lighting on them)")  # noqa: E501
+    description: str = Field(description="Physical description in ENGLISH. Include clothing, key features, and expression. IMPORTANT: This MUST align with the global 'style' (e.g., if stickman, keep outlines thick and features stylized).")  # noqa: E501
     action: str = Field(description="Specific action, pose, or interaction with other subjects in ENGLISH")  # noqa: E501
 
 
 class ImagePrompt(BaseModel):
     subjects: List[Subject] = Field(description="List of the main subjects present in the scene")
-    environment: str = Field(description="Location and background details in ENGLISH")
+    environment: str = Field(description="Location and background details in ENGLISH (e.g. professional office, busy street, cozy room). Style it to match the global 'style'.")  # noqa: E501
     lighting: str = Field(description="Lighting mood and color palette in ENGLISH")
     composition: str = Field(description="Shot framing and camera angle (e.g. Close-up, Wide shot) in ENGLISH")  # noqa: E501
+    style: str = Field(description="EXACT visual style in ENGLISH. Match the specific visual identity requested (e.g. 'Modern webcomic sketch style').")  # noqa: E501
 
     @property
     def formatted_prompt(self) -> str:

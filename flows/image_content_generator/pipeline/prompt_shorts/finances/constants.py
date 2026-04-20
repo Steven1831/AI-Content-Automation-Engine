@@ -50,6 +50,8 @@ SCRIPT_PROMPT: str = """# 📝 PROMPT MAESTRO — AGENTE GUIONISTA FINANCIERO (S
 - **Relación Imagen-Texto:** El `image_prompt` debe ilustrar visualmente el concepto financiero de la narración (gráficas, billetes, calculadoras, oficinas, crecimiento, comparativas).
 - **Sincronía Narrativa:** El `image_prompt` debe ser una traducción visual exacta de la `narration`. Lo que el espectador escucha debe verse en pantalla de forma clara y cinematográfica.
 - **Secuencialidad Visual:** Las imágenes deben mostrar progresión coherente (ej: de un cuarto humilde a una oficina propia, de números rojos a números verdes).
+- **Estilo (Sketch Stickman):** DEBES usar el campo `style` para generar imágenes con un estilo visual de cómic/sketch. La descripción en el campo `style` DEBE ser: `"Dynamic hand-drawn 2D webcomic sketch style, thick expressive black ink outlines, vibrant minimalist color palette for highlights, clean shading, white background with glowing accents."`.
+- **Uso del Color:** Utiliza el color de forma estratégica para resaltar elementos financieros clave (ej: billetes verdes, flechas de crecimiento, gráficas coloridas) y para dar vida al personaje, manteniendo siempre la estética de dibujo a mano.
 
 ### 🔴 ESTRUCTURA Y SALIDA
 - **Extensión:** Entre 12 y 16 escenas.
