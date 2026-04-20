@@ -4,7 +4,10 @@ from typing import Sequence, Type
 from pydantic import BaseModel
 
 from flows.image_content_generator.pipeline.prompt_base import constants
-from flows.image_content_generator.pipeline.prompt_base.models import CategoryHandler, SelectedConfig
+from flows.image_content_generator.pipeline.prompt_base.models import (
+    CategoryHandler,
+    SelectedConfig,
+)
 from tools.video_editing.whisper_schemas import WhisperTranscriptionSegment
 
 
