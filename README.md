@@ -21,10 +21,14 @@ A powerful, modular framework designed to automate professional video creation w
    ```bash
    poetry install
    ```
+   On Windows, if `poetry` is not available in `PATH`, use:
+   ```bash
+   python -m poetry install
+   ```
 3. Configure environment:
    ```env
    # .env
-   GOOGLE_API_KEY=your_key_here
+   GEMINI_API_KEY=your_key_here
    ```
 
 ### 🏃 Running the Pipeline (Quick Start)

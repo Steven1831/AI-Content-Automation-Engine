@@ -1,5 +1,5 @@
 import json
-import shlex
+import shutil
 import subprocess
 from pathlib import Path
 from typing import ClassVar, List
@@ -17,11 +17,33 @@ class WhisperTool(BaseModelTool):
     Tool for transcribing audio using whisper-cpp and generating SRT files.
     """
     DEFAULT_MODEL: ClassVar[str] = "models/whisper/ggml-small.bin"
+    DEFAULT_BINARY: ClassVar[str] = "whisper-cli"
 
-    def _run(self, cmd: str) -> None:
-        p = subprocess.run(cmd, shell=True)
+    def _ensure_requirements(self) -> Path:
+        """
+        Validates external whisper.cpp requirements before execution.
+        """
+        whisper_bin = shutil.which(self.DEFAULT_BINARY)
+        if whisper_bin is None:
+            raise RuntimeError(
+                "Whisper Error: 'whisper-cli' is not available in PATH. "
+                "Install whisper.cpp and expose 'whisper-cli' in your shell."
+            )
+
+        model_path = Path(self.DEFAULT_MODEL)
+        if not model_path.exists():
+            raise RuntimeError(
+                f"Whisper Error: model not found at '{model_path}'. "
+                "Download 'ggml-small.bin' and place it in models/whisper/."
+            )
+
+        return Path(whisper_bin)
+
+    def _run(self, cmd: List[str]) -> None:
+        # shell=False is better for Windows with list of args
+        p = subprocess.run(cmd, shell=False)
         if p.returncode != 0:
-            raise RuntimeError(f"Whisper Error: {cmd}")
+            raise RuntimeError(f"Whisper Error: {' '.join(cmd)}")
 
     def _get_transcription_json(
         self,
@@ -32,16 +54,19 @@ class WhisperTool(BaseModelTool):
         """
         json_path = audio_path.with_name(audio_path.name + ".json")
         if not json_path.exists():
+            whisper_bin = self._ensure_requirements()
             # -ojf: output json full (tokens with timestamps)
             cmd_args = [
-                "whisper-cli",
-                "-m", self.DEFAULT_MODEL,
-                "-l", "es",
+                str(whisper_bin),
+                "-m",
+                self.DEFAULT_MODEL,
+                "-l",
+                "es",
                 "-ojf",
-                "-f", str(audio_path)
+                "-f",
+                str(audio_path),
             ]
-            cmd = " ".join(shlex.quote(arg) for arg in cmd_args)
-            self._run(cmd)
+            self._run(cmd_args)
 
         with open(json_path, 'r', encoding='utf-8') as f:
             try:

@@ -1,4 +1,3 @@
-import shlex
 import subprocess
 import tempfile
 from pathlib import Path
@@ -13,10 +12,11 @@ class FFmpegTool(BaseModelTool):
     Tool for basic video editing operations using FFmpeg.
     """
 
-    def _run(self, cmd: str) -> None:
-        p = subprocess.run(cmd, shell=True)
+    def _run(self, cmd: List[str]) -> None:
+        # shell=False is better for Windows with list of args
+        p = subprocess.run(cmd, shell=False)
         if p.returncode != 0:
-            raise RuntimeError(f"FFmpeg falló: {cmd}")
+            raise RuntimeError(f"FFmpeg falló: {' '.join(cmd)}")
 
     def split_audio(
         self,
@@ -28,11 +28,14 @@ class FFmpegTool(BaseModelTool):
         """
         Splits an audio file into a segment starting at start_time with duration.
         """
-        cmd = (
-            f"ffmpeg -y -i {shlex.quote(str(audio_in))} "
-            f"-ss {start_time} -t {duration} {shlex.quote(str(audio_out))} "
-            f"-v error"
-        )
+        cmd = [
+            "ffmpeg", "-y",
+            "-i", str(audio_in),
+            "-ss", str(start_time),
+            "-t", str(duration),
+            "-v", "error",
+            str(audio_out)
+        ]
         self._run(cmd)
 
     def make_transition_video(
@@ -44,13 +47,13 @@ class FFmpegTool(BaseModelTool):
     ) -> None:
         offset = max(0, seconds - 1)
         xfade_filter = f"[0:v][1:v]xfade=transition=fade:duration=1:offset={offset},format=yuv420p"
-        cmd = f"""
-        ffmpeg -y \
-          -loop 1 -t {seconds} -i {shlex.quote(str(img_a))} \
-          -loop 1 -t {seconds} -i {shlex.quote(str(img_b))} \
-          -filter_complex "{xfade_filter}" \
-          -t {seconds} {shlex.quote(str(out_path))}
-        """
+        cmd = [
+            "ffmpeg", "-y",
+            "-loop", "1", "-t", str(seconds), "-i", str(img_a),
+            "-loop", "1", "-t", str(seconds), "-i", str(img_b),
+            "-filter_complex", xfade_filter,
+            "-t", str(seconds), str(out_path)
+        ]
         self._run(cmd)
 
     def concat_videos(
@@ -64,36 +67,46 @@ class FFmpegTool(BaseModelTool):
             with open(list_path, "w", encoding="utf-8") as f:
                 for v in video_list:
                     abs_v = v.absolute()
-                    f.write(f"file '{abs_v}'\n")
+                    # FFmpeg concat file expects single quotes escaped or double quotes? 
+                    # Usually it's: file 'path' (with backslashes escaped or forward slashes)
+                    safe_v = str(abs_v).replace("'", "'\\''")
+                    f.write(f"file '{safe_v}'\n")
 
-            cmd = f"""
-            ffmpeg -y -f concat -safe 0 -i {shlex.quote(str(list_path))} \
-                -c copy {shlex.quote(str(out_path))}
-            """
+            cmd = [
+                "ffmpeg", "-y",
+                "-f", "concat",
+                "-safe", "0",
+                "-i", str(list_path),
+                "-c", "copy",
+                str(out_path)
+            ]
             self._run(cmd)
 
     def get_audio_duration(self, audio_path: Path) -> float:
         """
         Retrieves the duration of an audio file using ffprobe.
         """
-        cmd_base = (
-            "ffprobe -v error -show_entries format=duration "
-            "-of default=noprint_wrappers=1:nokey=1"
-        )
-        cmd = f"{cmd_base} {shlex.quote(str(audio_path))}"
-        output = subprocess.check_output(cmd, shell=True).decode("utf-8").strip()
+        cmd = [
+            "ffprobe", "-v", "error",
+            "-show_entries", "format=duration",
+            "-of", "default=noprint_wrappers=1:nokey=1",
+            str(audio_path)
+        ]
+        output = subprocess.check_output(cmd, shell=False).decode("utf-8").strip()
         return float(output)
 
     def get_video_duration(self, video_path: Path) -> float:
         """
         Retrieves the duration of a video file using ffprobe.
         """
-        cmd_base = (
-            "ffprobe -v error -select_streams v:0 -show_entries format=duration "
-            "-of default=noprint_wrappers=1:nokey=1"
-        )
-        cmd = f"{cmd_base} {shlex.quote(str(video_path))}"
-        output = subprocess.check_output(cmd, shell=True).decode("utf-8").strip()
+        cmd = [
+            "ffprobe", "-v", "error",
+            "-select_streams", "v:0",
+            "-show_entries", "format=duration",
+            "-of", "default=noprint_wrappers=1:nokey=1",
+            str(video_path)
+        ]
+        output = subprocess.check_output(cmd, shell=False).decode("utf-8").strip()
         return float(output)
 
     def sync_video_and_audio(
@@ -104,8 +117,6 @@ class FFmpegTool(BaseModelTool):
     ) -> None:
         """
         Synchronizes a video file to an audio file's duration.
-        The video playback speed is adjusted (stretched or shrunk) to match
-        the exact duration of the audio, ensuring the entire video is shown.
         """
         audio_dur = self.get_audio_duration(audio_in)
         video_dur = self.get_video_duration(video_in)
@@ -113,42 +124,46 @@ class FFmpegTool(BaseModelTool):
         if video_dur <= 0:
             raise RuntimeError(f"Invalid video duration: {video_dur} for {video_in}")
 
-        # Calculate speed factor (scale) for video PTS
-        # new_duration = old_duration * scale -> scale = a_dur / v_dur
         scale = audio_dur / video_dur
 
-        cmd = (
-            f"ffmpeg -y -i {shlex.quote(str(video_in))} "
-            f"-i {shlex.quote(str(audio_in))} "
-            f'-filter_complex "[0:v]setpts={scale:.6f}*PTS[v]" '
-            f'-map "[v]" -map 1:a '
-            f"-c:v libx264 -c:a aac -pix_fmt yuv420p "
-            f"{shlex.quote(str(video_out))} -v error"
-        )
+        cmd = [
+            "ffmpeg", "-y",
+            "-i", str(video_in),
+            "-i", str(audio_in),
+            "-filter_complex", f"[0:v]setpts={scale:.6f}*PTS[v]",
+            "-map", "[v]", "-map", "1:a",
+            "-c:v", "libx264", "-c:a", "aac", "-pix_fmt", "yuv420p",
+            "-v", "error",
+            str(video_out)
+        ]
         self._run(cmd)
 
     def get_video_height(self, video_path: Path) -> int:
         """
         Retrieves the height of a video file using ffprobe.
         """
-        cmd_base = (
-            "ffprobe -v error -select_streams v:0 -show_entries stream=height "
-            "-of default=noprint_wrappers=1:nokey=1"
-        )
-        cmd = f"{cmd_base} {shlex.quote(str(video_path))}"
-        output = subprocess.check_output(cmd, shell=True).decode("utf-8").strip()
+        cmd = [
+            "ffprobe", "-v", "error",
+            "-select_streams", "v:0",
+            "-show_entries", "stream=height",
+            "-of", "default=noprint_wrappers=1:nokey=1",
+            str(video_path)
+        ]
+        output = subprocess.check_output(cmd, shell=False).decode("utf-8").strip()
         return int(output)
 
     def get_video_width(self, video_path: Path) -> int:
         """
         Retrieves the width of a video file using ffprobe.
         """
-        cmd_base = (
-            "ffprobe -v error -select_streams v:0 -show_entries stream=width "
-            "-of default=noprint_wrappers=1:nokey=1"
-        )
-        cmd = f"{cmd_base} {shlex.quote(str(video_path))}"
-        output = subprocess.check_output(cmd, shell=True).decode("utf-8").strip()
+        cmd = [
+            "ffprobe", "-v", "error",
+            "-select_streams", "v:0",
+            "-show_entries", "stream=width",
+            "-of", "default=noprint_wrappers=1:nokey=1",
+            str(video_path)
+        ]
+        output = subprocess.check_output(cmd, shell=False).decode("utf-8").strip()
         return int(output)
 
     def create_composite_scene_video(
@@ -158,10 +173,7 @@ class FFmpegTool(BaseModelTool):
         out_path: Path
     ) -> None:
         """
-        Creates a video with a 3-part dynamic sequence:
-        1. Zoom In (30%) - from 1.0 to 1.2
-        2. Soft Swing Loop (40%) - at 1.2
-        3. Zoom Out (30%) - from 1.2 to 1.0
+        Creates a video with a 3-part dynamic sequence.
         """
         duration = self.get_audio_duration(audio_path)
         fps = 25
@@ -169,12 +181,9 @@ class FFmpegTool(BaseModelTool):
         f1 = total_frames * 0.3
         f2 = total_frames * 0.7
 
-        # Infer dimensions from the source image
         width = self.get_video_width(img_path)
         height = self.get_video_height(img_path)
 
-        # Zoom expression (per frame)
-        # Part 1: 1.0 -> 1.2 | Part 2: 1.2 | Part 3: 1.2 -> 1.0
         z_expr = (
             f"if(lt(on,{f1}), 1.0+0.2*(on/{f1}), "
             f"if(lt(on,{f2}), 1.2, "
@@ -182,29 +191,38 @@ class FFmpegTool(BaseModelTool):
         )
         pos_filter = "x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)'"
         zoom_filter = f"zoompan=z='{z_expr}':d=1:{pos_filter}:s={width}x{height},format=yuv420p"
+        
+        # Handheld Jitter (random small movements)
+        jitter_filter = "vignette,noise=alls=10:allf=t+u,curves=vintage"
+        
+        # Jitter via random crop or rotate
+        # Let's use a simpler approach: slightly varying rotation and zoom
+        rotate_expr = "rotate='1*PI/180*sin(2*PI*t/3) + 0.1*sin(2*PI*t*5)'" # Added high freq jitter
+        
+        # Flicker (random brightness changes)
+        flicker_filter = "drawbox=y=ih-1:color=black@0.1,eq=brightness='0.02*sin(2*PI*t*10)':contrast=1.1"
 
-        # Rotation filter: constant soft swing
-        rotate_filter = "rotate='1*PI/180*sin(2*PI*t/3)'"
-
-        cmd = f"""
-        ffmpeg -y -loop 1 -i {shlex.quote(str(img_path))} \
-          -i {shlex.quote(str(audio_path))} \
-          -vf "{zoom_filter},{rotate_filter}" \
-          -shortest \
-          -c:v libx264 -c:a aac -pix_fmt yuv420p {shlex.quote(str(out_path))}
-        """
+        cmd = [
+            "ffmpeg", "-y",
+            "-loop", "1", "-i", str(img_path),
+            "-i", str(audio_path),
+            "-vf", f"{zoom_filter},{rotate_expr},{jitter_filter},{flicker_filter}",
+            "-shortest",
+            "-c:v", "libx264", "-c:a", "aac", "-pix_fmt", "yuv420p",
+            str(out_path)
+        ]
         self._run(cmd)
 
     def extract_audio(self, video_in: Path, audio_out: Path) -> None:
         """
-        Extracts audio from a video file, optimized for Whisper STT.
-        16kHz, mono, WAV.
+        Extracts audio from a video file.
         """
-        cmd = f"""
-        ffmpeg -y -i {shlex.quote(str(video_in))} \
-          -vn -ac 1 -ar 16000 \
-          {shlex.quote(str(audio_out))}
-        """
+        cmd = [
+            "ffmpeg", "-y",
+            "-i", str(video_in),
+            "-vn", "-ac", "1", "-ar", "16000",
+            str(audio_out)
+        ]
         self._run(cmd)
 
     def add_subtitles_to_video(
@@ -217,18 +235,13 @@ class FFmpegTool(BaseModelTool):
         """
         Adds subtitles to a video.
         """
-        # Get actual dimensions to set coordinate system
         width = self.get_video_width(video_in)
         height = self.get_video_height(video_in)
         margin_v = int(height * 0.15)
 
-        Messenger.info(f"Subtitling: {width}x{height}, MarginV={margin_v}px")
-
-        # Trendy style: Yellow text, black outline, Impact font
+        # FFmpeg subtitles filter needs escaped path for Windows
         safe_srt = str(srt_path).replace("\\", "/").replace(":", "\\:")
-
-        # We specify PlayResX/Y so that MarginV and FontSize are in pixels relative
-        # to the video's actual resolution, avoiding the 'middle of the screen' bug.
+        
         style = (
             f"PlayResX={width},PlayResY={height},"
             f"FontName=Impact,FontSize={font_size},PrimaryColour=&H00FFFF,"
@@ -237,11 +250,13 @@ class FFmpegTool(BaseModelTool):
         )
         sub_filter = f"subtitles={safe_srt}:force_style='{style}'"
 
-        cmd = f"""
-        ffmpeg -y -i {shlex.quote(str(video_in))} \
-          -vf "{sub_filter}" \
-          -c:a copy {shlex.quote(str(video_out))}
-        """
+        cmd = [
+            "ffmpeg", "-y",
+            "-i", str(video_in),
+            "-vf", sub_filter,
+            "-c:a", "copy",
+            str(video_out)
+        ]
         self._run(cmd)
 
     def add_background_music(
@@ -253,22 +268,20 @@ class FFmpegTool(BaseModelTool):
     ) -> None:
         """
         Mixes a background audio track into a video.
-        The music loops and is mixed at a low volume.
         """
-        # [0:a] is video narration (Step 5/6)
-        # [1:a] is background music (Step 7)
         filter_complex = (
             f"[0:a]volume=1.0[v_a]; "
             f"[1:a]volume={bg_volume}[bg_a]; "
             "[v_a][bg_a]amix=inputs=2:duration=first[fixed_a]"
         )
 
-        # -stream_loop -1 loops the background audio indefinitely
-        cmd = f"""
-        ffmpeg -y -i {shlex.quote(str(video_in))} \
-          -stream_loop -1 -i {shlex.quote(str(audio_bg))} \
-          -filter_complex "{filter_complex}" \
-          -map 0:v -map "[fixed_a]" \
-          -c:v copy -c:a aac {shlex.quote(str(video_out))}
-        """
+        cmd = [
+            "ffmpeg", "-y",
+            "-i", str(video_in),
+            "-stream_loop", "-1", "-i", str(audio_bg),
+            "-filter_complex", filter_complex,
+            "-map", "0:v", "-map", "[fixed_a]",
+            "-c:v", "copy", "-c:a", "aac",
+            str(video_out)
+        ]
         self._run(cmd)
