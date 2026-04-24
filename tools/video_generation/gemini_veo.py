@@ -3,7 +3,6 @@ from pathlib import Path
 from typing import Any, List, Optional
 
 from google.genai import types
-from PIL import Image
 
 from tools.common.gemini_base import GeminiBase
 from tools.common.messenger import Messenger
@@ -41,48 +40,54 @@ class GeminiVideoGenerator(GeminiBase):
     ) -> None:
         """
         Generates a video clip using Veo 3.1 and saves it to disk.
-        This is an asynchronous operation that polls for completion.
         """
         output_path.parent.mkdir(parents=True, exist_ok=True)
 
         Messenger.info(f"Starting Veo 3.1 video generation for: {output_path.name}")
         
-        # Guide the generation with style references if provided
-        # Veo supports up to 3 reference images in the config
         config = types.GenerateVideosConfig(
             aspect_ratio=self.aspect_ratio,
         )
         
-        # Start the video generation operation
+        # Start operation
         operation = self.client.models.generate_videos(
             model=self.video_model,
             prompt=prompt,
             config=config
         )
 
-        # Poll for completion
+        # Poll using client.operations.get
         start_time = time.time()
-        max_wait = 600 # 10 minutes timeout
+        max_wait = 900 # 15 minutes timeout
         
-        while not operation.done:
+        while True:
+            # Refresh operation status
+            current_op = self.client.operations.get(name=operation.name)
+            
+            if current_op.done:
+                operation = current_op
+                break
+                
             elapsed = int(time.time() - start_time)
             if elapsed > max_wait:
                 raise RuntimeError(f"Video generation timed out after {max_wait}s")
             
             Messenger.info(f"Veo 3.1: Generation in progress... ({elapsed}s)")
-            time.sleep(20)
-            operation.refresh()
+            time.sleep(30)
 
         if operation.result:
             video = operation.result
             # Write video data to file
+            # The structure for Video results usually has generated_video list
             for part in video.generated_video:
                  with open(output_path, "wb") as f:
                      f.write(part.video.data)
             
             Messenger.success(f"Video generated successfully: {output_path}")
+        elif operation.error:
+            raise RuntimeError(f"Veo 3.1 error: {operation.error}")
         else:
-            raise RuntimeError("Veo 3.1 failed to return a result.")
+            raise RuntimeError("Veo 3.1 failed without result or error.")
 
     def generate_videos_batch(self, tasks: List[Any]) -> None:
         """
