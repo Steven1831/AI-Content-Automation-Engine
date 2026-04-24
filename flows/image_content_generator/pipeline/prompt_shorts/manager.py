@@ -10,6 +10,7 @@ from flows.image_content_generator.pipeline.prompt_shorts.finances import (
     constants as finances_constants,
 )
 from flows.image_content_generator.pipeline.prompt_shorts.finances.models import FinancesHandler
+from flows.image_content_generator.pipeline.prompt_shorts.eco_colapso.models import EcoColapsoHandler
 from tools.common.messenger import Messenger
 from tools.text_generation.gemini import GeminiTextGenerator
 
@@ -21,7 +22,8 @@ class PromptManagerShorts(BasePromptManager):
     AUDIO_PROMPT: str = finances_constants.AUDIO_PROMPT
 
     CATEGORIES: Sequence[Type[CategoryHandler]] = [
-        FinancesHandler,
+        # FinancesHandler,
+        EcoColapsoHandler,
     ]
 
     def generate_full_story(

@@ -40,9 +40,9 @@ def main():
     # Map Enum members to their corresponding pipeline methods
     step_methods = {
         PipelineStep.STEP1: pipeline.step1_generate_story,
-        PipelineStep.STEP2: pipeline.step2_generate_images,
+        PipelineStep.STEP2: pipeline.step2_generate_videos,
         PipelineStep.STEP3: pipeline.step3_generate_audios,
-        PipelineStep.STEP4: pipeline.step4_generate_videos,
+        PipelineStep.STEP4: pipeline.step4_sync_videos,
         PipelineStep.STEP5: pipeline.step5_generate_subtitles,
         PipelineStep.STEP6: pipeline.step6_add_background_music,
         PipelineStep.STEP7: pipeline.step7_rename_final_video,

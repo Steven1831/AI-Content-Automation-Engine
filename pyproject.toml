@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "Video Automation Project"
 authors = ["Hans <hans.acha.brand@gmail.com>"]
 readme = "README.md"
-packages = [{ include = "flows" }]
+packages = [{ include = "flows" }, { include = "tools" }, { include = "models" }]
 
 [tool.poetry.dependencies]
 python = "^3.11"
@@ -16,6 +16,9 @@ pillow = "^12.1.0"
 pydantic = "^2.12.5"
 selenium = "^4.41.0"
 pydantic-settings = "^2.13.1"
+tenacity = "^9.1.2"
+requests = "^2.32.5"
+pytz = "^2025.2"
 
 [tool.poetry.group.dev.dependencies]
 black = "^26.3.1"
@@ -35,17 +38,15 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.pyright]
-include = ["flows", "tools", "models"]
-exclude = ["**/node_modules", "**/__pycache__", ".venv"]
+include = ["flows", "tools"]
+exclude = ["**/node_modules", "**/__pycache__", ".venv", "**/out_long", "**/out_short"]
 venvPath = "."
 venv = ".venv"
 typeCheckingMode = "strict"
 reportMissingImports = true
 reportMissingTypeStubs = false
 pythonVersion = "3.11"
-pythonPlatform = "Darwin"
+pythonPlatform = "Windows"
 executionEnvironments = [
-  { root = "flows" },
-  { root = "tools" },
-  { root = "models" }
+  { root = ".", extraPaths = ["."] }
 ]
