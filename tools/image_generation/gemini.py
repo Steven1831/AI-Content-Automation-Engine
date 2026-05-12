@@ -10,6 +10,8 @@ from tools.common.messenger import Messenger
 from tools.image_generation.midjourney import ImageTask
 
 
+from tools.utils.time import retry
+
 class GeminiImageGenerator(GeminiBase):
     image_model: str = "gemini-3.1-flash-image-preview"
     aspect_ratio: str
@@ -31,6 +33,7 @@ class GeminiImageGenerator(GeminiBase):
             **kwargs
         )
 
+    @retry(max_attempts=3, delay=10)
     def generate_image(
         self,
         prompt: str,
@@ -56,7 +59,7 @@ class GeminiImageGenerator(GeminiBase):
         )
 
         if not response or not response.parts:
-            raise RuntimeError("❌ Gemini Image no devolvió partes")
+            raise RuntimeError("Gemini Image no devolvio partes")
 
         self._extract_usage(response, self.image_model)
         image = self._extract_image(response)
@@ -116,5 +119,5 @@ class GeminiImageGenerator(GeminiBase):
                 break
 
         if image is None:
-            raise RuntimeError("❌ No se encontró imagen en la respuesta de Gemini")
+            raise RuntimeError("No se encontro imagen en la respuesta de Gemini")
         return image

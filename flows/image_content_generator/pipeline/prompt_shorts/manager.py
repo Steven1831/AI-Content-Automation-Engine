@@ -48,3 +48,15 @@ class PromptManagerShorts(BasePromptManager):
         script = content_gen.generate_text(script_prompt, VideoScript)
 
         return idea_data, script, config.category
+
+    def generate_script_from_idea(
+        self, content_gen: GeminiTextGenerator, idea_data: BaseIdea, category: str
+    ) -> VideoScript:
+        """Generates a structured script from an existing idea."""
+        # Find the correct handler for the category
+        handler_cls = next((c for c in self.CATEGORIES if c.__name__ == category), EcoColapsoHandler)
+        
+        Messenger.info(f"\n--- Generating script for: {idea_data.title} ---")
+        script_prompt = handler_cls.get_full_script_prompt(idea_data)
+        script = content_gen.generate_text(script_prompt, VideoScript)
+        return script

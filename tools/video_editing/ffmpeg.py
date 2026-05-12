@@ -77,7 +77,8 @@ class FFmpegTool(BaseModelTool):
                 "-f", "concat",
                 "-safe", "0",
                 "-i", str(list_path),
-                "-c", "copy",
+                "-c:v", "libx264", "-c:a", "aac",
+                "-r", "30", # Force uniform framerate to avoid drops
                 str(out_path)
             ]
             self._run(cmd)
@@ -92,8 +93,13 @@ class FFmpegTool(BaseModelTool):
             "-of", "default=noprint_wrappers=1:nokey=1",
             str(audio_path)
         ]
-        output = subprocess.check_output(cmd, shell=False).decode("utf-8").strip()
-        return float(output)
+        try:
+            output = subprocess.check_output(cmd, shell=False).decode("utf-8").strip()
+            if output == "N/A":
+                return 0.0
+            return float(output)
+        except (subprocess.CalledProcessError, ValueError):
+            return 0.0
 
     def get_video_duration(self, video_path: Path) -> float:
         """
@@ -106,8 +112,13 @@ class FFmpegTool(BaseModelTool):
             "-of", "default=noprint_wrappers=1:nokey=1",
             str(video_path)
         ]
-        output = subprocess.check_output(cmd, shell=False).decode("utf-8").strip()
-        return float(output)
+        try:
+            output = subprocess.check_output(cmd, shell=False).decode("utf-8").strip()
+            if output == "N/A":
+                return 0.0
+            return float(output)
+        except (subprocess.CalledProcessError, ValueError):
+            return 0.0
 
     def sync_video_and_audio(
         self,

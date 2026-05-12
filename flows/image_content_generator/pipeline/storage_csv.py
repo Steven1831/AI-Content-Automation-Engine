@@ -53,6 +53,11 @@ class CsvStore(CsvProcessor):
 
     def add_new_idea(self, title: str, category: str) -> IdeaRaw:
         new_id = self.get_next_id()
+        df = self.read_all()
+
+        # Check if title already exists to avoid duplicates
+        if not df.empty and title in df[Column.TITLE.value].values:
+            title = f"{title} #{new_id}"
 
         row_data: dict[str, Any] = {
             Column.ID.value: new_id,

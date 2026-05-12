@@ -1,11 +1,13 @@
+import os
 import time
 from pathlib import Path
 from typing import Any, List, Optional
-
+import requests
 from google.genai import types
 
 from tools.common.gemini_base import GeminiBase
 from tools.common.messenger import Messenger
+from tools.utils.time import retry
 
 
 class GeminiVideoGenerator(GeminiBase):
@@ -32,11 +34,13 @@ class GeminiVideoGenerator(GeminiBase):
             **kwargs
         )
 
+    @retry(max_attempts=2, delay=30)
     def generate_video(
         self,
         prompt: str,
         output_path: Path,
-        style_references: List[Path] = []
+        style_references: List[Path] = [],
+        source_image: Optional[Path] = None
     ) -> None:
         """
         Generates a video clip using Veo 3.1 and saves it to disk.
@@ -49,10 +53,15 @@ class GeminiVideoGenerator(GeminiBase):
             aspect_ratio=self.aspect_ratio,
         )
         
+        image_input = None
+        if source_image and source_image.exists():
+            image_input = types.Image.from_file(location=str(source_image))
+        
         # Start operation
         operation = self.client.models.generate_videos(
             model=self.video_model,
             prompt=prompt,
+            image=image_input,
             config=config
         )
 
@@ -62,7 +71,7 @@ class GeminiVideoGenerator(GeminiBase):
         
         while True:
             # Refresh operation status
-            current_op = self.client.operations.get(name=operation.name)
+            current_op = self.client.operations.get(operation=operation)
             
             if current_op.done:
                 operation = current_op
@@ -78,10 +87,13 @@ class GeminiVideoGenerator(GeminiBase):
         if operation.result:
             video = operation.result
             # Write video data to file
-            # The structure for Video results usually has generated_video list
-            for part in video.generated_video:
-                 with open(output_path, "wb") as f:
-                     f.write(part.video.data)
+            for part in video.generated_videos:
+                uri = part.video.uri
+                api_key = os.getenv("GEMINI_API_KEY")
+                res = requests.get(uri, params={'key': api_key})
+                res.raise_for_status()
+                with open(output_path, "wb") as f:
+                    f.write(res.content)
             
             Messenger.success(f"Video generated successfully: {output_path}")
         elif operation.error:
@@ -102,7 +114,8 @@ class GeminiVideoGenerator(GeminiBase):
                 self.generate_video(
                     prompt=task.prompt,
                     output_path=task.output_path,
-                    style_references=self.style_references
+                    style_references=self.style_references,
+                    source_image=getattr(task, 'source_image', None)
                 )
             except Exception as e:
                 Messenger.error(f"Failed to generate clip {i}: {str(e)}")

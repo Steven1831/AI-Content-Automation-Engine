@@ -19,31 +19,37 @@ def start_production(count: int = 6):
         orientation=VideoOrientation.SHORT
     )
 
-    Messenger.info(f"--- Starting Veo 3.1 Production for {count} Shorts ---")
+    Messenger.info("--- Starting Persistent Production Loop ---")
+    import time
 
-    for i in range(count):
-        Messenger.info(f"--- PRODUCING SHORT #{i+1} OF {count} ---")
+    while True:
+        progress_made = False
         
-        # Step 1: Script
-        pipeline.step1_generate_story()
+        try:
+            # 1. Prioritize Finishing and Cleaning (Steps 12 down to 4)
+            if pipeline.step12_cleanup_completed(): progress_made = True
+            if pipeline.step11_rename_final_video(): progress_made = True
+            if pipeline.step10_publish_to_youtube(): progress_made = True
+            if pipeline.step9_upload_to_drive(): progress_made = True
+            if pipeline.step8_generate_metadata(): progress_made = True
+            if pipeline.step7_add_background_music(): progress_made = True
+            if pipeline.step6_generate_subtitles(): progress_made = True
+            if pipeline.step5_sync_videos(): progress_made = True
+            if pipeline.step4_generate_audios(): progress_made = True
+            
+            # 2. Parallel Processing for heavy steps (3, 2, 1, 1a)
+            if pipeline.step3_generate_videos(batch_size=2): progress_made = True
+            if pipeline.step2_generate_images(batch_size=3): progress_made = True
+            if pipeline.step1a_validate_quality(batch_size=5): progress_made = True
+            if pipeline.step1_generate_story(batch_size=5): progress_made = True
+        except Exception as e:
+            Messenger.error(f"Critical error in production loop: {e}")
+            time.sleep(30)
+            continue
         
-        # Step 2: Native Video Generation (Veo 3.1)
-        pipeline.step2_generate_videos()
-        
-        # Step 3: Audio (Gemini TTS)
-        pipeline.step3_generate_audios()
-        
-        # Step 4: Sync Video with Audio
-        pipeline.step4_sync_videos()
-        
-        # Step 5: Subtitles
-        pipeline.step5_generate_subtitles()
-        
-        # Step 6: Background Music
-        pipeline.step6_add_background_music()
-        
-        # Step 7: Final Rename
-        pipeline.step7_rename_final_video()
+        if not progress_made:
+            Messenger.info("Queue empty or stuck. Waiting 60 seconds before next check...")
+            time.sleep(60)
 
     Messenger.success(f"--- Production Complete: {count} videos generated with Veo 3.1 ---")
 
