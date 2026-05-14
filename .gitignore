@@ -14,6 +14,7 @@ __pycache__/
 # folders
 models
 youtube_token.pickle
+secrets/
 **/out
 **/out_long
 **/out_short
